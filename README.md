@@ -21,7 +21,7 @@ AI-powered git commit auditing tool that analyzes your staged changes using loca
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/codegate.git
+git clone https://github.com/DoffuXx/codegate.git
 cd codegate
 
 # Build the binary
@@ -34,7 +34,7 @@ sudo mv codegate /usr/local/bin/
 ### Using Go Install
 
 ```bash
-go install github.com/yourusername/codegate@latest
+go install github.com/DoffuXx/codegate@latest
 ```
 
 ## Quick Start
@@ -45,6 +45,7 @@ go install github.com/yourusername/codegate@latest
    - Start the local server (default: `http://localhost:1234`)
 
 2. **Stage your changes**:
+
    ```bash
    git add .
    ```
@@ -57,12 +58,14 @@ go install github.com/yourusername/codegate@latest
 ## Usage
 
 ### Basic Review
+
 ```bash
 # Analyze all staged changes
 codegate review
 ```
 
 ### Focus on Specific Areas
+
 ```bash
 # Focus on security and bugs only
 codegate review --focus security,bugs
@@ -71,6 +74,7 @@ codegate review --focus security,bugs
 ```
 
 ### Different Output Formats
+
 ```bash
 # JSON output
 codegate review --format json
@@ -83,12 +87,14 @@ codegate review --preview
 ```
 
 ### Provider Selection
+
 ```bash
 # Use a specific provider (when multiple are configured)
 codegate review --provider lmstudio
 ```
 
 ### Verbose Output
+
 ```bash
 # Enable debug logging
 codegate review --verbose
@@ -121,7 +127,7 @@ audit:
 
 # Output Settings
 output:
-  format: table  # table, json, or markdown
+  format: table # table, json, or markdown
   show_suggestions: true
   group_by_severity: true
 ```
@@ -217,4 +223,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/yourusername/codegate).
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/DoffuXx/codegate).

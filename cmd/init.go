@@ -47,7 +47,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Create sample config
 	sampleConfig := `# CodeGate Configuration
-# For more details, see: https://github.com/yourusername/codegate
+# For more details, see: https://github.com/DoffuXx/codegate
 # AI Provider Configuration
 providers:
   lmstudio:

@@ -9,6 +9,7 @@ This document summarizes all code design changes made to prepare `codegate` for 
 **Problem**: Hardcoded `/tmp/` paths don't work on Windows
 
 **Changes**:
+
 - `cmd/review.go`: Replaced `const debugLogFile` with `getDebugLogPath()` function
 - `internal/providers/lmstudio/client.go`: Same fix applied
 - Both now use `filepath.Join(os.TempDir(), "codegate-json-debug.log")`
@@ -20,12 +21,14 @@ This document summarizes all code design changes made to prepare `codegate` for 
 **Problem**: No way to track which version users are running
 
 **Changes**:
+
 - `main.go`: Added version variables and `SetVersionInfo()` call
 - `cmd/version.go`: New command to display version, commit, and build date
 - `cmd/root.go`: Updated to use version info
 - `Makefile`: Automatically injects version info during build
 
 **Usage**:
+
 ```bash
 make build  # Sets version from git tags
 ./codegate version
@@ -36,10 +39,12 @@ make build  # Sets version from git tags
 **Problem**: Users don't know how to configure the tool
 
 **Changes**:
+
 - `cmd/init.go`: New command that creates sample config with explanations
 - `.codegate.example.yaml`: Example configuration with detailed comments
 
 **Usage**:
+
 ```bash
 ./codegate init
 # Creates ~/.codegate.yaml with defaults
@@ -50,10 +55,12 @@ make build  # Sets version from git tags
 **Problem**: Developers need consistent build process
 
 **Changes**:
+
 - `Makefile`: Complete build, test, and development workflow
 - Targets: build, test, test-coverage, install, clean, fmt, vet, lint, help
 
 **Usage**:
+
 ```bash
 make build      # Build with version info
 make test       # Run all tests
@@ -66,11 +73,13 @@ make help       # Show all targets
 **Problem**: No tests to verify correctness or guide contributors
 
 **Changes**:
+
 - `internal/git/diff_test.go`: 7 test cases for URL parsing
 - `internal/providers/lmstudio/config_test.go`: 13 test cases for config validation
 - `pkg/models/providers_test.go`: 9 test cases for model serialization
 
 **Results**:
+
 ```bash
 $ make test
 ✓ All tests pass
@@ -81,6 +90,7 @@ $ make test
 **Problem**: No guidance for users or contributors
 
 **Changes**:
+
 - `LICENSE`: MIT License
 - `README.md`: Comprehensive user documentation
 - `CONTRIBUTING.md`: Contributor guidelines
@@ -93,6 +103,7 @@ $ make test
 **Problem**: System prompt was hidden from users
 
 **Changes**:
+
 - `internal/providers/lmstudio/config.go`: System prompt already configurable
 - `.codegate.example.yaml`: Added comment showing system_prompt option
 - Documentation clarifies that users can customize AI behavior
@@ -102,6 +113,7 @@ $ make test
 **Problem**: Code wasn't in git repository
 
 **Changes**:
+
 - Initialized git repository
 - Created `.gitignore` with appropriate exclusions
 - Renamed default branch to `main`
@@ -111,6 +123,7 @@ $ make test
 ### High Priority (Before Public Release)
 
 1. **Add GitHub Actions CI/CD**
+
    ```yaml
    # .github/workflows/ci.yml
    - Run tests on push
@@ -129,13 +142,14 @@ $ make test
    - Add security policy (SECURITY.md)
 
 4. **Update URLs**
-   - Replace `yourusername` placeholders in README
+   - Replace `DoffuXx` placeholders in README
    - Set up actual GitHub repository
    - Update badge URLs
 
 ### Medium Priority
 
 5. **Add Pre-commit Hook Support**
+
    ```bash
    codegate install-hooks
    ```
@@ -169,26 +183,31 @@ $ make test
 ## 🎯 Design Principles Applied
 
 ### 1. Fail Gracefully
+
 - Clear error messages with context
 - Validation happens early
 - Users are guided to solutions
 
 ### 2. Cross-Platform by Default
+
 - No hardcoded Unix paths
 - Platform-specific code isolated
 - Tested on multiple OS
 
 ### 3. Configurable, Not Hardcoded
+
 - System prompts can be customized
 - All paths are configurable
 - Sensible defaults provided
 
 ### 4. Developer-Friendly
+
 - Easy to build (`make build`)
 - Easy to test (`make test`)
 - Easy to contribute (CONTRIBUTING.md)
 
 ### 5. Documentation First
+
 - Code is documented
 - Architecture is explained
 - Examples are provided
@@ -214,6 +233,7 @@ $ make test
 ## 🚀 Ready to Open Source?
 
 **Checklist:**
+
 - [x] License file (MIT)
 - [x] README with installation and usage
 - [x] Contributing guidelines
@@ -230,6 +250,7 @@ $ make test
 - [ ] First release tag
 
 **Almost ready!** Just need to:
+
 1. Set up GitHub repository
 2. Update URLs in documentation
 3. Add GitHub Actions (optional but recommended)
