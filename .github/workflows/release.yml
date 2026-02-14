@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+
+    - name: Run tests
+      run: make test
+
+    - name: Build binaries
+      run: |
+        # Linux AMD64
+        GOOS=linux GOARCH=amd64 go build \
+          -ldflags "-X main.version=${GITHUB_REF#refs/tags/} -X main.commit=${GITHUB_SHA::7} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o codegate-linux-amd64 .
+
+        # Linux ARM64
+        GOOS=linux GOARCH=arm64 go build \
+          -ldflags "-X main.version=${GITHUB_REF#refs/tags/} -X main.commit=${GITHUB_SHA::7} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o codegate-linux-arm64 .
+
+        # macOS AMD64
+        GOOS=darwin GOARCH=amd64 go build \
+          -ldflags "-X main.version=${GITHUB_REF#refs/tags/} -X main.commit=${GITHUB_SHA::7} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o codegate-darwin-amd64 .
+
+        # macOS ARM64 (Apple Silicon)
+        GOOS=darwin GOARCH=arm64 go build \
+          -ldflags "-X main.version=${GITHUB_REF#refs/tags/} -X main.commit=${GITHUB_SHA::7} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o codegate-darwin-arm64 .
+
+        # Windows AMD64
+        GOOS=windows GOARCH=amd64 go build \
+          -ldflags "-X main.version=${GITHUB_REF#refs/tags/} -X main.commit=${GITHUB_SHA::7} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o codegate-windows-amd64.exe .
+
+    - name: Create checksums
+      run: |
+        sha256sum codegate-* > checksums.txt
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          codegate-linux-amd64
+          codegate-linux-arm64
+          codegate-darwin-amd64
+          codegate-darwin-arm64
+          codegate-windows-amd64.exe
+          checksums.txt
+        body: |
+          ## Installation
+
+          Download the appropriate binary for your platform:
+
+          ### Linux
+          ```bash
+          # AMD64
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/codegate-linux-amd64
+          chmod +x codegate-linux-amd64
+          sudo mv codegate-linux-amd64 /usr/local/bin/codegate
+
+          # ARM64
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/codegate-linux-arm64
+          chmod +x codegate-linux-arm64
+          sudo mv codegate-linux-arm64 /usr/local/bin/codegate
+          ```
+
+          ### macOS
+          ```bash
+          # Intel
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/codegate-darwin-amd64
+          chmod +x codegate-darwin-amd64
+          sudo mv codegate-darwin-amd64 /usr/local/bin/codegate
+
+          # Apple Silicon
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/codegate-darwin-arm64
+          chmod +x codegate-darwin-arm64
+          sudo mv codegate-darwin-arm64 /usr/local/bin/codegate
+          ```
+
+          ### Windows
+          Download `codegate-windows-amd64.exe` and add to your PATH.
+
+          ## Verify Installation
+          ```bash
+          codegate version
+          ```
+
+          ## What's Changed
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

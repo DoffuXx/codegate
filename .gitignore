@@ -1,0 +1,38 @@
+# Binaries
+codegate
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug and log files
+codegate-debug.log
+*.log
+
+# Config files (users should create their own)
+.codegate.yaml
+.codegate.yml
+
+# Build artifacts
+dist/
+build/

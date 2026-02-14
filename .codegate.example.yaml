@@ -1,0 +1,66 @@
+# Example configuration file for CodeGate
+# Copy this to ~/.codegate.yaml and customize for your setup
+
+# AI Provider Configuration
+providers:
+  lmstudio:
+    enabled: true
+    config:
+      # LM Studio server URL (default: http://localhost:1234)
+      base_url: http://localhost:1234
+
+      # Maximum tokens to generate in response
+      max_tokens: 2048
+
+      # Temperature for AI generation (0.0 = deterministic, 2.0 = creative)
+      temperature: 0.1
+
+      # Request timeout in seconds
+      timeout_seconds: 120
+
+      # Enable streaming responses for faster feedback
+      enable_streaming: true
+
+      # Optional: Specify model name (auto-detected if empty)
+      # model: "qwen2.5-coder-7b-instruct"
+
+      # Optional: Custom system prompt for the AI
+      # By default, the AI is instructed to return structured JSON with code review findings
+      # Uncomment and modify to customize the AI's behavior
+      # system_prompt: "You are an expert code reviewer..."
+
+# Audit Settings
+audit:
+  # Default AI provider to use
+  default_provider: lmstudio
+
+  # Default focus areas for analysis
+  # Options: performance, security, bugs, maintainability, style, documentation
+  default_focus:
+    - bugs
+    - security
+    - performance
+
+  # Automatically detect programming language from diff
+  auto_detect_language: true
+
+  # Optional: Override max_tokens for audit requests
+  # max_tokens: 2048
+
+  # Optional: Override temperature for audit requests
+  # temperature: 0.1
+
+# Output Settings
+output:
+  # Default output format
+  # Options: table, json, markdown
+  format: table
+
+  # Show AI suggestions in output
+  show_suggestions: true
+
+  # Group issues by severity level
+  group_by_severity: true
+
+# Verbose logging (useful for debugging)
+# verbose: false
