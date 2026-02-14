@@ -48,7 +48,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Create sample config
 	sampleConfig := `# CodeGate Configuration
 # For more details, see: https://github.com/yourusername/codegate
-
 # AI Provider Configuration
 providers:
   lmstudio:
@@ -56,54 +55,45 @@ providers:
     config:
       # LM Studio server URL
       base_url: http://localhost:1234
-
       # Maximum tokens to generate
       max_tokens: 2048
-
       # Temperature (0.0 = deterministic, 2.0 = creative)
       temperature: 0.1
-
       # Request timeout in seconds
       timeout_seconds: 120
-
       # Enable streaming for faster feedback
       enable_streaming: true
-
       # Optional: Specify model (auto-detected if empty)
       # model: "qwen2.5-coder-7b-instruct"
-
 # Audit Settings
 audit:
   # Default AI provider
   default_provider: lmstudio
-
   # Default focus areas
   # Options: performance, security, bugs, maintainability, style, documentation
   default_focus:
     - bugs
     - security
     - performance
-
   # Auto-detect programming language
   auto_detect_language: true
-
 # Output Settings
 output:
   # Default format: table, json, or markdown
   format: table
-
   # Show AI suggestions
   show_suggestions: true
-
   # Group issues by severity
   group_by_severity: true
-
+  # Custom command for preview mode (empty = use system default)
+  # Examples: "glow", "bat", "code", "vim"
+  preview_command: ""
 # Verbose logging (useful for debugging)
 # verbose: false
 `
 
 	// Write config file
-	if err := os.WriteFile(outputPath, []byte(sampleConfig), 0644); err != nil {
+	if err := os.WriteFile(outputPath, []byte(sampleConfig), 0o644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

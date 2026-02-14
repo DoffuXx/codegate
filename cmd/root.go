@@ -126,6 +126,9 @@ func setDefaults() {
 	viper.SetDefault("providers.lmstudio.config.timeout_seconds", 120)
 	viper.SetDefault("providers.lmstudio.config.enable_streaming", true)
 
+	// Preview Coammand default
+	viper.SetDefault("output.preview_command", "")
+
 	// Default audit settings
 	viper.SetDefault("audit.default_provider", "lmstudio")
 	viper.SetDefault("audit.default_focus", []string{"bugs", "security", "performance"})

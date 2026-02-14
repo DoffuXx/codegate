@@ -150,13 +150,30 @@ func handlePreviewMode(response *models.AuditResponse) error {
 	}
 
 	fmt.Printf("Markdown saved: %s\n", tmpFile)
-	return openFileInBrowser(tmpFile)
+	return openMarkdownPreview(tmpFile)
 }
 
-// openFileInBrowser opens a file using the system's default application
-func openFileInBrowser(filepath string) error {
-	var cmd *exec.Cmd
+// openMarkdownPreview opens a markdown file using configured or system default application
+func openMarkdownPreview(filepath string) error {
+	// Check for custom preview command from config
+	customCommand := viper.GetString("output.preview_command")
+	if customCommand != "" {
+		// For CLI tools like glow, we need to run in foreground
+		cmd := exec.Command(customCommand, filepath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
 
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Custom command '%s' failed: %v\nFalling back to system default. File: %s\n",
+				customCommand, err, filepath)
+		} else {
+			return nil // Success, don't fall back
+		}
+	}
+
+	// System default fallback
+	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "linux":
 		cmd = exec.Command("xdg-open", filepath)
@@ -171,9 +188,8 @@ func openFileInBrowser(filepath string) error {
 
 	if err := cmd.Start(); err != nil {
 		fmt.Printf("Could not open automatically. Please open: %s\n", filepath)
-		return nil // Don't return error, just inform user
+		return nil
 	}
-
 	return nil
 }
 
