@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"math/rand"
 	"strings"
 	"time"
 )
@@ -70,19 +69,6 @@ type ProviderMetadata struct {
 	Cost       float64       `json:"cost,omitempty"`
 }
 
-var codeReviewQuotes = []string{
-	"Code is poetry written for machines to dance to.",
-	"The best code is the code that doesn't need to be written.",
-	"Debugging is like being the detective in a crime movie where you are also the murderer.",
-	"Clean code always looks like it was written by someone who cares.",
-	"Code never lies, comments sometimes do.",
-	"Simplicity is the ultimate sophistication in code.",
-	"First, solve the problem. Then, write the code.",
-	"The best error message is the one that never shows up.",
-	"Good code is its own best documentation.",
-	"Programming is the art of telling another human what one wants the computer to do.",
-}
-
 func (issue *AuditIssue) UnmarshalJSON(data []byte) error {
 	type Alias AuditIssue
 	aux := &struct {
@@ -115,15 +101,4 @@ func (issue *AuditIssue) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
-}
-
-func (r *AuditResponse) GetRandomQuote() string {
-	if len(codeReviewQuotes) == 0 {
-		return "Happy coding!"
-	}
-
-	// Seed with current time for randomness
-	rand.Seed(time.Now().UnixNano())
-	index := rand.Intn(len(codeReviewQuotes))
-	return codeReviewQuotes[index]
 }

@@ -36,7 +36,7 @@ REQUIRED JSON STRUCTURE:
         {
             "severity": "high|medium|low|info",
             "category": "bugs|security|performance|style",
-            "title": "Issue title", 
+            "title": "Issue title",
             "description": "Detailed explanation",
             "line_number": 0,
             "file_name": "",

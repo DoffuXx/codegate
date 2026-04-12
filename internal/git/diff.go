@@ -1,6 +1,7 @@
 package git
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -16,36 +17,29 @@ type GitDiffInfo struct {
 
 // ExtractStagedChanges gets the diff of currently staged changes with git context
 func ExtractStagedChanges() (*GitDiffInfo, error) {
-	// Check if we're in a git repository first
 	if err := checkGitRepository(); err != nil {
 		return nil, err
 	}
 
 	info := &GitDiffInfo{}
 
-	// Get staged changes diff
+	// Get staged changes diff (required)
 	diff, err := getGitDiff()
 	if err != nil {
 		return nil, err
 	}
 	info.Diff = diff
 
-	// Get current branch name
+	// Get current branch name (required)
 	branch, err := getCurrentBranch()
 	if err != nil {
 		return nil, err
 	}
 	info.BranchName = branch
 
-	// Get current commit hash (optional, ignore errors)
-	if hash, err := getCurrentCommitHash(); err == nil {
-		info.CommitHash = hash
-	}
-
-	// Get repository name (optional, ignore errors)
-	if repoName, err := getRepositoryName(); err == nil {
-		info.RepoName = repoName
-	}
+	// Get optional metadata (don't fail on errors)
+	info.CommitHash, _ = getCurrentCommitHash()
+	info.RepoName, _ = getRepositoryName()
 
 	return info, nil
 }
@@ -61,8 +55,7 @@ func ExtractStagedChangesLegacy() (string, error) {
 
 // checkGitRepository verifies we're in a git repository
 func checkGitRepository() error {
-	cmd := exec.Command("git", "rev-parse", "--git-dir")
-	if err := cmd.Run(); err != nil {
+	if err := runGitCommand("rev-parse", "--git-dir"); err != nil {
 		return fmt.Errorf("not in a git repository")
 	}
 	return nil
@@ -70,26 +63,21 @@ func checkGitRepository() error {
 
 // getGitDiff gets the staged changes diff
 func getGitDiff() (string, error) {
-	cmd := exec.Command("git", "diff", "--cached")
-	output, err := cmd.CombinedOutput()
+	output, err := runGitCommandOutput("diff", "--cached")
 	if err != nil {
-		if strings.Contains(string(output), "not a git repository") {
-			return "", fmt.Errorf("not in a git repository")
-		}
-		return "", fmt.Errorf("git command failed: %w\nOutput: %s", err, output)
+		return "", fmt.Errorf("failed to get git diff: %w", err)
 	}
-	return string(output), nil
+	return output, nil
 }
 
 // getCurrentBranch gets the current branch name
 func getCurrentBranch() (string, error) {
-	cmd := exec.Command("git", "branch", "--show-current")
-	output, err := cmd.CombinedOutput()
+	output, err := runGitCommandOutput("branch", "--show-current")
 	if err != nil {
-		return "", fmt.Errorf("failed to get current branch: %w\nOutput: %s", err, output)
+		return "", fmt.Errorf("failed to get current branch: %w", err)
 	}
 
-	branch := strings.TrimSpace(string(output))
+	branch := strings.TrimSpace(output)
 	if branch == "" {
 		// Fallback for detached HEAD state
 		return getDetachedHeadInfo()
@@ -100,60 +88,72 @@ func getCurrentBranch() (string, error) {
 
 // getDetachedHeadInfo handles detached HEAD state
 func getDetachedHeadInfo() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
-	output, err := cmd.CombinedOutput()
+	shortHash, err := runGitCommandOutput("rev-parse", "--short", "HEAD")
 	if err != nil {
 		return "unknown", nil // Don't fail, just return unknown
 	}
-
-	shortHash := strings.TrimSpace(string(output))
-	return fmt.Sprintf("detached-HEAD-%s", shortHash), nil
+	return fmt.Sprintf("detached-HEAD-%s", strings.TrimSpace(shortHash)), nil
 }
 
-// getCurrentCommitHash gets the current commit hash
+// getCurrentCommitHash gets the current commit hash (short version)
 func getCurrentCommitHash() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "HEAD")
-	output, err := cmd.CombinedOutput()
+	hash, err := runGitCommandOutput("rev-parse", "--short=7", "HEAD")
 	if err != nil {
 		return "", err
 	}
-
-	hash := strings.TrimSpace(string(output))
-	// Return short hash for readability
-	if len(hash) > 7 {
-		return hash[:7], nil
-	}
-	return hash, nil
+	return strings.TrimSpace(hash), nil
 }
 
 // getRepositoryName extracts repository name from remote URL
 func getRepositoryName() (string, error) {
-	cmd := exec.Command("git", "remote", "get-url", "origin")
-	output, err := cmd.CombinedOutput()
+	url, err := runGitCommandOutput("remote", "get-url", "origin")
 	if err != nil {
 		return "", err
 	}
-
-	url := strings.TrimSpace(string(output))
-	return extractRepoNameFromURL(url), nil
+	return extractRepoNameFromURL(strings.TrimSpace(url)), nil
 }
 
 // extractRepoNameFromURL extracts repository name from git URL
+// Handles: https://github.com/user/repo, git@github.com:user/repo, ssh://git@github.com/user/repo
 func extractRepoNameFromURL(url string) string {
-	// Remove .git suffix if present
+	// Remove .git suffix
 	url = strings.TrimSuffix(url, ".git")
 
-	// Handle different URL formats:
-	// https://github.com/user/repo
-	// git@github.com:user/repo
-	// ssh://git@github.com/user/repo
+	// Replace colon with slash for SSH URLs (git@github.com:user/repo -> git@github.com/user/repo)
+	if strings.Contains(url, ":") && !strings.Contains(url, "://") {
+		url = strings.Replace(url, ":", "/", 1)
+	}
 
-	if strings.Contains(url, "/") {
-		parts := strings.Split(url, "/")
-		if len(parts) > 0 {
-			return parts[len(parts)-1]
-		}
+	// Extract last path segment
+	parts := strings.Split(url, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
 	}
 
 	return "unknown"
+}
+
+// runGitCommand executes a git command and returns error if it fails
+func runGitCommand(args ...string) error {
+	cmd := exec.Command("git", args...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		if stderr.Len() > 0 {
+			return fmt.Errorf("%w: %s", err, stderr.String())
+		}
+		return err
+	}
+	return nil
+}
+
+// runGitCommandOutput executes a git command and returns output
+func runGitCommandOutput(args ...string) (string, error) {
+	cmd := exec.Command("git", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("%w: %s", err, strings.TrimSpace(string(output)))
+	}
+	return string(output), nil
 }

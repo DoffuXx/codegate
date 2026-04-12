@@ -45,20 +45,24 @@ issues including bugs, security vulnerabilities, and performance problems.
 The command extracts the current staged changes using 'git diff --cached'
 and sends them to your configured AI provider for analysis.
 
+By default, generates a markdown report and opens it in your browser/viewer.
+Use --no-preview for structured table output instead.
+
 Examples:
-  git-audit review                    # Analyze with default settings
-  git-audit review --focus security  # Focus only on security issues  
-  git-audit review --format json     # Output results as JSON`,
+  git-audit review                      # Generate markdown preview (default)
+  git-audit review --no-preview         # Show table output in terminal
+  git-audit review --focus security     # Focus only on security issues
+  git-audit review --format json        # Output results as JSON`,
 
 	RunE: runReview,
 }
 
 // Command-specific flags for the review command
 var (
-	focusFlag    []string // Specific focus areas for this review
-	formatFlag   string   // Output format override
-	providerFlag string   // Provider override for this review
-	previewFlag  bool     // Whether to generate markdown preview in browser
+	focusFlag     []string // Specific focus areas for this review
+	formatFlag    string   // Output format override
+	providerFlag  string   // Provider override for this review
+	noPreviewFlag bool     // Disable preview mode (opt-out)
 )
 
 // init sets up the review command flags and adds it to the root command
@@ -69,17 +73,20 @@ func init() {
 		"focus areas: performance, security, bugs, maintainability, style, documentation")
 
 	reviewCmd.Flags().StringVar(&formatFlag, "format", "",
-		"output format: table, json, markdown (overrides config)")
+		"output format: table, json, markdown (overrides config and disables preview)")
 
 	reviewCmd.Flags().StringVarP(&providerFlag, "provider", "p", "",
 		"AI provider to use: lmstudio, openai, claude (overrides config)")
 
-	reviewCmd.Flags().BoolVar(&previewFlag, "preview", false, "generate markdown and open in browser")
+	reviewCmd.Flags().BoolVar(&noPreviewFlag, "no-preview", false,
+		"disable markdown preview, show table output instead")
 }
 
 // runReview implements the main logic for the review command
 func runReview(cmd *cobra.Command, args []string) error {
-	viper.Set("preview", previewFlag)
+	// Preview is enabled by default, disabled only if --no-preview or --format is set
+	previewEnabled := !noPreviewFlag && formatFlag == ""
+	viper.Set("preview", previewEnabled)
 
 	ctx, cancel := context.WithTimeout(context.Background(), maxAnalysisTime)
 	defer cancel()
@@ -124,11 +131,12 @@ func runReview(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("AI analysis failed: %w", err)
 	}
 
-	// Handle preview mode
-	if previewFlag {
+	// Handle preview mode (default behavior)
+	if previewEnabled {
 		return handlePreviewMode(response)
 	}
 
+	// Handle explicit format flags or --no-preview
 	return displayResults(response, configMgr)
 }
 
@@ -195,71 +203,26 @@ func openMarkdownPreview(filepath string) error {
 
 func showProgressWithEstimate(message string, fn func()) error {
 	done := make(chan bool, 1)
-	errorChan := make(chan error, 1)
 	start := time.Now()
 
-	quotes := []string{
-		"Analyzing code patterns",
-		"Checking for potential bugs",
-		"Reviewing security practices",
-		"Examining performance patterns",
-		"Validating code quality",
-		"Scanning for improvements",
-	}
-
 	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				errorChan <- fmt.Errorf("analysis panicked: %v", r)
-				return
-			}
-		}()
 		fn()
 		done <- true
 	}()
 
-	fmt.Printf("%s ", message)
-
 	spinner := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-	ticker := time.NewTicker(progressUpdateRate)
-	quoteTicker := time.NewTicker(quoteUpdateRate)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
-	defer quoteTicker.Stop()
 
-	spinnerIndex := 0
-	quoteIndex := 0
-
+	i := 0
 	for {
 		select {
 		case <-done:
-			elapsed := time.Since(start)
-			fmt.Printf("\r%s completed in %s%s\n",
-				message, elapsed.Round(time.Second), strings.Repeat(" ", 10))
+			fmt.Printf("\r%-80s\r✓ %s (%s)\n", "", message, time.Since(start).Round(time.Second))
 			return nil
-		case err := <-errorChan:
-			elapsed := time.Since(start)
-			fmt.Printf("\r%s failed after %s%s\n",
-				message, elapsed.Round(time.Second), strings.Repeat(" ", 10))
-			return err
-		case <-quoteTicker.C:
-			quoteIndex = (quoteIndex + 1) % len(quotes)
 		case <-ticker.C:
-			elapsed := time.Since(start)
-			spinnerIndex = (spinnerIndex + 1) % len(spinner)
-
-			timeInfo := ""
-			if elapsed > 5*time.Second {
-				timeInfo = fmt.Sprintf(" (%s)", elapsed.Round(time.Second))
-			}
-
-			display := fmt.Sprintf("%s %s %s%s",
-				message, spinner[spinnerIndex], quotes[quoteIndex], timeInfo)
-
-			if len(display) > maxDisplayWidth {
-				display = display[:maxDisplayWidth-3] + "..."
-			}
-
-			fmt.Printf("\r%-*s", maxDisplayWidth, display)
+			fmt.Printf("\r%s %s", spinner[i%len(spinner)], message)
+			i++
 		}
 	}
 }
@@ -448,7 +411,7 @@ func displayTable(response *models.AuditResponse, settings config.OutputSettings
 	fmt.Println()
 
 	if len(response.Issues) == 0 {
-		green.Println("No issues found! Your code looks good.")
+		green.Println("✓ No issues found! Your code looks good.")
 		displayCommitInfo(response, cyan)
 		return nil
 	}

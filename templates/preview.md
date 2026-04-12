@@ -1,8 +1,6 @@
-# 🔍 Code Review Analysis
+# 🔍 CodeGate Review Analysis
 
-> _AI-powered code review • Focusing on security, performance, maintainability, and best practices_
-
-> {{ Quote }}
+> "{{ Quote }}
 
 ## 📊 Summary
 
@@ -166,4 +164,4 @@ _⏱️ Review completed in [duration] • 🤖 Powered by AI_
 - Consider cross-cutting concerns: security, performance, accessibility, i18n, error handling
 - Be constructively critical - find real issues while acknowledging good practices
 - Generate a relevant coding quote at the beginning to inspire good practices
-- replace Quote with an actual quote from a well-known developer or software engineering principle like this **"Code is like humor. When you have to explain it, it's bad."** — Cory House
+- insert in {{ Quote }} a piece of wisdom or an insightful quote about code quality or software engineering, attributed to a renowned expert or supported by reputable research.

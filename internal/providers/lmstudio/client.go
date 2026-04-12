@@ -17,6 +17,7 @@ import (
 
 	"codegate/pkg/interfaces"
 	"codegate/pkg/models"
+	"codegate/pkg/prompts"
 	"codegate/pkg/registry"
 	"codegate/templates"
 
@@ -138,7 +139,7 @@ func (c *Client) autoDetectModel(ctx context.Context) error {
 func (c *Client) Audit(ctx context.Context, request models.AuditRequest) (*models.AuditResponse, error) {
 	startTime := time.Now()
 
-	prompt, err := c.buildPrompt(request)
+	prompt, err := prompts.BuildAuditPrompt(request, c.config.SystemPrompt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build prompt: %w", err)
 	}
@@ -164,52 +165,6 @@ func (c *Client) Audit(ctx context.Context, request models.AuditRequest) (*model
 	}
 
 	return auditResponse, nil
-}
-
-// buildPrompt constructs a specialized prompt for code analysis
-func (c *Client) buildPrompt(request models.AuditRequest) (string, error) {
-	var promptBuilder strings.Builder
-
-	isPreview := viper.GetBool("preview")
-
-	if isPreview {
-		template, err := c.loadPreviewTemplate()
-		if err != nil {
-			return "", fmt.Errorf("failed to load preview template: %w", err)
-		}
-		promptBuilder.WriteString("You are an AI-powered code reviewer with expertise across all programming languages. Provide thorough, actionable code analysis.\n\n")
-		promptBuilder.WriteString("Analyze the provided git diff and create a comprehensive markdown report following this EXACT structure:\n\n")
-		promptBuilder.WriteString(template)
-	} else {
-		promptBuilder.WriteString(c.config.SystemPrompt)
-	}
-
-	// Add focus areas if specified
-	if len(request.Focus) > 0 {
-		promptBuilder.WriteString("\n\nFocus specifically on these areas:\n")
-		for _, focus := range request.Focus {
-			promptBuilder.WriteString(fmt.Sprintf("- %s\n", focus))
-		}
-		promptBuilder.WriteString("\n")
-	}
-
-	// Add language context if detected
-	if request.Language != "" {
-		promptBuilder.WriteString(fmt.Sprintf("The code is primarily %s.\n\n", request.Language))
-	}
-
-	// Add the git diff
-	promptBuilder.WriteString("Here is the git diff to analyze:\n\n")
-	promptBuilder.WriteString("```diff\n")
-	promptBuilder.WriteString(request.Diff)
-	promptBuilder.WriteString("\n```\n\n")
-
-	// Final instructions for JSON mode
-	if !isPreview {
-		promptBuilder.WriteString(`Respond ONLY with valid JSON in the specified format.`)
-	}
-
-	return promptBuilder.String(), nil
 }
 
 // loadPreviewTemplate loads the markdown template for preview mode
@@ -591,7 +546,7 @@ func (c *Client) GetCapabilities() interfaces.ProviderCapabilities {
 }
 
 func (c *Client) AuditRaw(ctx context.Context, request models.AuditRequest) (string, error) {
-	prompt, err := c.buildPrompt(request)
+	prompt, err := prompts.BuildAuditPrompt(request, c.config.SystemPrompt)
 	if err != nil {
 		return "", fmt.Errorf("failed to build prompt: %w", err)
 	}

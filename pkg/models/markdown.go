@@ -9,7 +9,6 @@ import (
 // MarkdownConfig allows customization of markdown output
 type MarkdownConfig struct {
 	IncludeMetadata   bool `json:"include_metadata"`
-	IncludeQuote      bool `json:"include_quote"`
 	IncludeTOC        bool `json:"include_toc"`
 	MaxCodeSnippetLen int  `json:"max_code_snippet_len"`
 	GroupBySeverity   bool `json:"group_by_severity"`
@@ -20,7 +19,6 @@ type MarkdownConfig struct {
 func DefaultMarkdownConfig() MarkdownConfig {
 	return MarkdownConfig{
 		IncludeMetadata:   true,
-		IncludeQuote:      true,
 		IncludeTOC:        false,
 		MaxCodeSnippetLen: 500,
 		GroupBySeverity:   true,
@@ -62,12 +60,6 @@ func (mb *markdownBuilder) build(r *AuditResponse) string {
 
 // writeHeader writes document header with metadata and TOC
 func (mb *markdownBuilder) writeHeader(r *AuditResponse) {
-	mb.sb.WriteString("# Code Review Analysis\n\n")
-
-	if mb.config.IncludeQuote {
-		mb.sb.WriteString(fmt.Sprintf("> %s\n\n", r.GetRandomQuote()))
-	}
-
 	if mb.config.IncludeMetadata && r.Metadata.Provider != "" {
 		mb.writeMetadataTable(r.Metadata)
 	}

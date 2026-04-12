@@ -8,10 +8,10 @@ import (
 
 func TestAuditIssueUnmarshalJSON(t *testing.T) {
 	tests := []struct {
-		name           string
-		jsonInput      string
-		expectedFix    string
-		shouldError    bool
+		name        string
+		jsonInput   string
+		expectedFix string
+		shouldError bool
 	}{
 		{
 			name: "String recommended_fix",
@@ -121,27 +121,6 @@ func TestAuditResponseToMarkdown(t *testing.T) {
 		if !strings.Contains(markdown, section) {
 			t.Errorf("Markdown missing expected section: %q", section)
 		}
-	}
-}
-
-func TestGetRandomQuote(t *testing.T) {
-	response := &AuditResponse{}
-
-	// Test that it returns a quote
-	quote := response.GetRandomQuote()
-	if quote == "" {
-		t.Error("GetRandomQuote() returned empty string")
-	}
-
-	// Test that multiple calls can return different quotes
-	// (this is probabilistic, but with 10 quotes, we should get variety)
-	quotes := make(map[string]bool)
-	for i := 0; i < 100; i++ {
-		quotes[response.GetRandomQuote()] = true
-	}
-
-	if len(quotes) < 2 {
-		t.Error("GetRandomQuote() appears to not be random")
 	}
 }
 
