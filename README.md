@@ -9,8 +9,8 @@ AI-powered git commit auditing tool that analyzes your staged changes using loca
 
 - 🔍 **Automated Code Review**: Analyzes staged changes for bugs, security issues, performance problems, and more
 - 🤖 **Multiple AI Providers**: Support for local LLMs (LM Studio) with plans for OpenAI and Claude
-- 📊 **Multiple Output Formats**: Table, JSON, and Markdown output
-- 🌐 **Browser Preview**: Generate and view detailed markdown reports
+- 🌐 **Markdown Preview by Default**: Analysis opens automatically in your browser or configured markdown viewer
+- 📊 **Multiple Output Formats**: Table, JSON, and Markdown to stdout (opt-in with `--no-preview` or `--format`)
 - ⚙️ **Configurable Focus Areas**: Security, performance, bugs, maintainability, style, documentation
 - 🔧 **Language Detection**: Automatic programming language detection for context-aware analysis
 - 🎨 **Beautiful Terminal Output**: Color-coded severity levels and formatted tables
@@ -50,7 +50,7 @@ go install github.com/DoffuXx/codegate@latest
    git add .
    ```
 
-3. **Run the audit**:
+3. **Run the audit** (opens markdown preview in browser by default):
    ```bash
    codegate review
    ```
@@ -60,8 +60,11 @@ go install github.com/DoffuXx/codegate@latest
 ### Basic Review
 
 ```bash
-# Analyze all staged changes
+# Analyze all staged changes (opens markdown preview in browser by default)
 codegate review
+
+# Disable preview mode and show table output in terminal
+codegate review --no-preview
 ```
 
 ### Focus on Specific Areas
@@ -76,14 +79,14 @@ codegate review --focus security,bugs
 ### Different Output Formats
 
 ```bash
-# JSON output
+# Table output in terminal (disables preview)
+codegate review --no-preview
+
+# JSON output (disables preview)
 codegate review --format json
 
-# Markdown output
+# Markdown output to stdout (disables preview)
 codegate review --format markdown
-
-# Generate and open markdown preview in browser
-codegate review --preview
 ```
 
 ### Provider Selection
@@ -91,6 +94,17 @@ codegate review --preview
 ```bash
 # Use a specific provider (when multiple are configured)
 codegate review --provider lmstudio
+```
+
+### Custom Markdown Viewer
+
+```bash
+# Configure a custom markdown viewer (e.g., glow, mdcat) in ~/.codegate.yaml
+output:
+  preview_command: "glow"  # CLI markdown viewer instead of browser
+
+# Or set via environment variable
+export CODEGATE_OUTPUT_PREVIEW_COMMAND="mdcat"
 ```
 
 ### Verbose Output
@@ -127,9 +141,11 @@ audit:
 
 # Output Settings
 output:
-  format: table # table, json, or markdown
+  format: table # table, json, or markdown (only applies when preview is disabled)
   show_suggestions: true
   group_by_severity: true
+  preview_command: "" # optional: custom markdown viewer (e.g., "glow", "mdcat")
+                      # if not set, uses system default (xdg-open/open/start)
 ```
 
 ### Environment Variables
