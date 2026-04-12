@@ -144,8 +144,9 @@ output:
   format: table # table, json, or markdown (only applies when preview is disabled)
   show_suggestions: true
   group_by_severity: true
-  preview_command: "" # optional: custom markdown viewer (e.g., "glow", "mdcat")
-                      # if not set, uses system default (xdg-open/open/start)
+  preview_command:
+    "" # optional: custom markdown viewer (e.g., "glow", "mdcat")
+    # if not set, uses system default (xdg-open/open/start)
 ```
 
 ### Environment Variables
@@ -219,11 +220,11 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## Roadmap
 
 - [ ] Add OpenAI provider
+- [ ] Ability to Update Template Prompts and Adding More Templates
 - [ ] Add Anthropic Claude provider
 - [ ] Add GitHub Copilot integration
 - [ ] Git hooks integration (pre-commit)
 - [ ] CI/CD pipeline integration
-- [ ] Auto-fix suggestions
 - [ ] Interactive mode
 - [ ] Historical analysis tracking
 
@@ -235,7 +236,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [Cobra](https://github.com/spf13/cobra) for CLI
 - Powered by [Viper](https://github.com/spf13/viper) for configuration
-- Uses [LM Studio](https://lmstudio.ai/) for local AI inference
 
 ## Support
 
