@@ -230,7 +230,10 @@ func showProgressWithEstimate(message string, fn func()) error {
 // getProviderForReview determines which AI provider to use, considering flag overrides
 func getProviderForReview(configMgr *config.Manager) (providers.AIProvider, error) {
 	if providerFlag != "" {
+		// Override active provider and ensure it is marked enabled so
+		// GetActiveProvider doesn't reject it when it has no config entry.
 		viper.Set("audit.default_provider", providerFlag)
+		viper.Set(fmt.Sprintf("providers.%s.enabled", providerFlag), true)
 	}
 	return configMgr.GetActiveProvider()
 }
