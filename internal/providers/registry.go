@@ -7,6 +7,6 @@ import (
 	// Each provider's init() function registers itself with the factory
 	_ "codegate/internal/providers/lmstudio"
 	// Future providers would be added here:
-	// _ "codegate/internal/providers/openai"
+	_ "codegate/internal/providers/openai"
 	// _ "codegate/internal/providers/claude"
 )
