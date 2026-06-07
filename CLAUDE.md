@@ -63,15 +63,15 @@ go run . review
 
 ### Run with flags
 ```bash
-# Analyze with specific focus areas
+# Analyze with specific focus areas (uses default markdown preview)
 ./codegate review --focus security,bugs
 
-# Different output formats
+# Disable markdown preview and show table output
+./codegate review --no-preview
+
+# Different output formats (disables preview)
 ./codegate review --format json
 ./codegate review --format markdown
-
-# Generate markdown preview in browser
-./codegate review --preview
 
 # Use different provider (when implemented)
 ./codegate review --provider lmstudio
@@ -108,7 +108,7 @@ When adding a new provider (e.g., OpenAI, Claude):
 ```
 User runs review command
   ↓
-cmd/review.go extracts CLI flags
+cmd/review.go extracts CLI flags and determines preview mode (default: enabled)
   ↓
 internal/config/manager.go loads config (Viper)
   ↓
@@ -120,7 +120,9 @@ Provider builds prompt + calls AI API (streaming or standard)
   ↓
 Response parsed to models.AuditResponse
   ↓
-cmd/review.go displays results (table/json/markdown)
+cmd/review.go displays results:
+  - Default: Markdown preview (browser/viewer)
+  - With --no-preview or --format: Table/JSON/Markdown to stdout
 ```
 
 ### Package Structure
@@ -160,17 +162,22 @@ audit:
   default_provider: lmstudio
   default_focus: [bugs, security, performance]
 output:
-  format: table
+  format: table  # only applies when preview is disabled
   show_suggestions: true
+  preview_command: ""  # optional: custom markdown viewer (e.g., "glow", "mdcat")
 ```
 
-### Preview Mode
+### Preview Mode (Default Behavior)
 
-The `--preview` flag triggers a different workflow:
+Preview mode is **enabled by default**. Users can opt-out with `--no-preview` flag or by specifying an explicit `--format` (json/markdown).
+
+When preview mode is enabled:
 1. Uses markdown template from `templates/preview.md` (embedded)
 2. AI generates markdown directly (not structured JSON)
 3. Saves to `/tmp/codegate-<timestamp>.md`
-4. Opens in system browser (platform-specific: `xdg-open`, `open`, `start`)
+4. Opens in system browser or configured viewer (platform-specific: `xdg-open`, `open`, `start`)
+
+The `output.preview_command` config allows users to specify a custom markdown viewer (e.g., `glow`, `mdcat`) instead of the system default browser.
 
 ### Response Parsing Strategy
 

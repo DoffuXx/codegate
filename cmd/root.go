@@ -118,13 +118,24 @@ func initConfig() {
 // setDefaults establishes sensible default values for all configuration options
 // This ensures the tool works out of the box without requiring configuration
 func setDefaults() {
-	// Default AI provider configuration
+	// Default AI provider configuration — LM Studio
 	viper.SetDefault("providers.lmstudio.enabled", true)
 	viper.SetDefault("providers.lmstudio.config.base_url", "http://localhost:1234")
 	viper.SetDefault("providers.lmstudio.config.max_tokens", 2048)
 	viper.SetDefault("providers.lmstudio.config.temperature", 0.1)
 	viper.SetDefault("providers.lmstudio.config.timeout_seconds", 120)
 	viper.SetDefault("providers.lmstudio.config.enable_streaming", true)
+
+	// Default AI provider configuration — OpenAI
+	// api_key is intentionally not defaulted here; use OPENAI_API_KEY env var
+	// or set providers.openai.config.api_key in ~/.codegate.yaml
+	viper.SetDefault("providers.openai.enabled", false)
+	viper.SetDefault("providers.openai.config.base_url", "https://api.openai.com")
+	viper.SetDefault("providers.openai.config.model", "gpt-4o")
+	viper.SetDefault("providers.openai.config.max_tokens", 4096)
+	viper.SetDefault("providers.openai.config.temperature", 0.1)
+	viper.SetDefault("providers.openai.config.timeout_seconds", 120)
+	viper.SetDefault("providers.openai.config.enable_streaming", true)
 
 	// Preview Coammand default
 	viper.SetDefault("output.preview_command", "")
